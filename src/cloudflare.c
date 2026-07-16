@@ -56,57 +56,68 @@ int read_record_ip(ddns_config config, char *ip, int ip_length) {
   return result;
 }
 
-// int update_record_ip(ddns_config config, const char *new_ip) {
-//     CURL *curl;
-//     CURLcode res;
-//     struct response_buffer resp = { .data = malloc(1), .size = 0 };
-//     int success = 0;
+int update_record_ip(ddns_config config, const char *ip) {
+  CURL *curl;
+  CURLcode res;
+  int result = 0;
+  struct response_buffer resp = { .data = malloc(1), .size = 0 };
 
-//     char url[256];
-//     snprintf(url, sizeof(url),
-//              "https://api.cloudflare.com/client/v4/zones/%s/dns_records/%s",
-//              zone_id, record_id);
+  char url[512];
+  snprintf(
+    url, 
+    sizeof(url),
+    "%s/zones/%s/dns_records/%s",
+    CF_API_BASE_URL,
+    config.zone_id, 
+    config.record_id
+  );
 
-//     char auth_header[512];
-//     snprintf(auth_header, sizeof(auth_header), "Authorization: Bearer %s", api_token);
+  char auth_header[512];
+  snprintf(
+    auth_header, 
+    sizeof(auth_header), 
+    "Authorization: Bearer %s", 
+    config.api_token
+  );
 
-//     char json_body[256];
-//     snprintf(json_body, sizeof(json_body),
-//              "{\"type\":\"A\",\"content\":\"%s\"}", new_ip);
+  char json_body[256];
+  snprintf(
+    json_body, 
+    sizeof(json_body),
+    "{\"type\":\"A\",\"content\":\"%s\"}", 
+    ip
+  );
 
-//     curl = curl_easy_init();
-//     if (curl) {
-//         struct curl_slist *headers = NULL;
-//         headers = curl_slist_append(headers, auth_header);
-//         headers = curl_slist_append(headers, "Content-Type: application/json");
+  curl = curl_easy_init();
+  if (curl) {
+    struct curl_slist *headers = NULL;
+    headers = curl_slist_append(headers, auth_header);
+    headers = curl_slist_append(headers, "Content-Type: application/json");
 
-//         curl_easy_setopt(curl, CURLOPT_URL, url);
-//         curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "PATCH");
-//         curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
-//         curl_easy_setopt(curl, CURLOPT_POSTFIELDS, json_body);
-//         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
-//         curl_easy_setopt(curl, CURLOPT_WRITEDATA, &resp);
-//         curl_easy_setopt(curl, CURLOPT_TIMEOUT, 10L);
+    curl_easy_setopt(curl, CURLOPT_URL, url);
+    curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "PATCH");
+    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, json_body);
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &resp);
+    curl_easy_setopt(curl, CURLOPT_TIMEOUT, 10L);
 
-//         res = curl_easy_perform(curl);
+    res = curl_easy_perform(curl);
 
-//         if (res != CURLE_OK) {
-//             fprintf(stderr, "Erro na requisição: %s\n", curl_easy_strerror(res));
-//         } else {
-//             long http_code = 0;
-//             curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_code);
-//             if (http_code == 200) {
-//                 printf("DNS atualizado com sucesso: %s\n", resp.data);
-//                 success = 1;
-//             } else {
-//                 fprintf(stderr, "Falha (HTTP %ld): %s\n", http_code, resp.data);
-//             }
-//         }
+    if (res != CURLE_OK) {
+      result = 5;
+    } else {
+      long http_code = 0;
+      curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_code);
 
-//         curl_slist_free_all(headers);
-//         curl_easy_cleanup(curl);
-//     }
+      if (http_code != 200) result = 5;
+    }
 
-//     free(resp.data);
-//     return success;
-// }
+    curl_slist_free_all(headers);
+    curl_easy_cleanup(curl);
+  }
+
+  free(resp.data);
+  
+  return result;
+}

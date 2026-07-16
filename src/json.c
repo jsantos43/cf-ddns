@@ -15,7 +15,7 @@ int parse_record_ip(const char *response, char *ip, int ip_length) {
   if (!cJSON_IsTrue(success)) {
     cJSON_Delete(root);
 
-    return 4;
+    return 3;
   }
 
   // Go to: root -> result -> content
@@ -26,7 +26,7 @@ int parse_record_ip(const char *response, char *ip, int ip_length) {
   if (!cJSON_IsString(content) || content->valuestring == NULL) {
     cJSON_Delete(root);
 
-    return 5;
+    return 3;
   }
 
   snprintf(ip, ip_length, "%s", content->valuestring);

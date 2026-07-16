@@ -33,7 +33,7 @@ int main(void) {
   char public_ip[IP_LENGTH];
   if (read_public_ip(public_ip, IP_LENGTH) != 0) {
     fprintf(stderr, "Error to read public ip via a request\n");
-    return 6;
+    return 4;
   }
 
   printf("CURRENT IP: %s\n", public_ip);
@@ -41,12 +41,21 @@ int main(void) {
 
   if (strcmp(record_ip, public_ip) != 0) {
     printf("IPs addresses are not equal!\n");
-    // make update
+    
+    int update_record_result = update_record_ip(config, public_ip);
+    if (update_record_result == 0) {
+      printf("Record ip address updated!\n");
+    } else {
+      printf("Failed to update record ip address!\n");
+      return update_record_result;
+    }
   } else {
-    printf("IPs addresses are equal!\n");
+    printf("IPs addresses are synchronized!\n");
   }
 
   curl_global_cleanup();
+
+  printf("All done!\n");
 
   return 0;
 }

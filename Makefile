@@ -12,8 +12,8 @@ LDLIBS  := $(shell pkg-config --libs libcurl)
 BUILD   := build
 TARGET  := $(BUILD)/cf-ddns
 
-# Fontes: teu código + biblioteca de terceiros (vendored)
-SRCS    := ddns-updater.c vendor/cjson/cJSON.c
+# Fontes: todo .c em src/ (descoberto automaticamente) + biblioteca de terceiros
+SRCS    := $(wildcard src/*.c) vendor/cjson/cJSON.c
 OBJS    := $(SRCS:%.c=$(BUILD)/%.o)
 DEPS    := $(OBJS:.o=.d)
 

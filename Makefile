@@ -1,38 +1,29 @@
-# cf-ddns — cliente DDNS para Cloudflare em C
-# Uso:
-#   make          compila para build/cf-ddns
-#   make run      compila e executa
-#   make clean    remove os artefatos de build
+# cf-ddns — DDNS client for Cloudflare in C
+# Usage:
+#   make          build ./cf-ddns
+#   make run      build and run
+#   make clean    remove the executable
 
 CC      := gcc
 CFLAGS  := -std=c11 -Wall -Wextra -O2 -Ivendor/cjson
 CFLAGS  += $(shell pkg-config --cflags libcurl)
 LDLIBS  := $(shell pkg-config --libs libcurl)
 
-BUILD   := build
-TARGET  := $(BUILD)/cf-ddns
+TARGET  := cf-ddns
 
-# Fontes: todo .c em src/ (descoberto automaticamente) + biblioteca de terceiros
+# Sources: every .c in src/ (auto-discovered) + third-party library
 SRCS    := $(wildcard src/*.c) vendor/cjson/cJSON.c
-OBJS    := $(SRCS:%.c=$(BUILD)/%.o)
-DEPS    := $(OBJS:.o=.d)
 
 .PHONY: all run clean
 
 all: $(TARGET)
 
-$(TARGET): $(OBJS)
-	$(CC) $(CFLAGS) $(OBJS) -o $@ $(LDLIBS)
-
-# Compila cada .c para build/, recriando a subpasta e gerando .d (dependências de headers)
-$(BUILD)/%.o: %.c
-	@mkdir -p $(@D)
-	$(CC) $(CFLAGS) -MMD -MP -c $< -o $@
+# Compile all sources at once, straight into the executable (no intermediate .o/.d)
+$(TARGET): $(SRCS)
+	$(CC) $(CFLAGS) $(SRCS) -o $@ $(LDLIBS)
 
 run: $(TARGET)
 	./$(TARGET)
 
 clean:
-	rm -rf $(BUILD)
-
--include $(DEPS)
+	rm -f $(TARGET)

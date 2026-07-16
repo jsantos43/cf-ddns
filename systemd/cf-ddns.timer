@@ -1,0 +1,10 @@
+[Unit]
+Description=Run cf-ddns periodically to keep the DNS record in sync
+
+[Timer]
+OnBootSec=1min
+OnUnitActiveSec=1min
+Persistent=true
+
+[Install]
+WantedBy=timers.target

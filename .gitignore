@@ -1,3 +1,2 @@
-node_modules
-settings.json
-ipv6.json
+config.txt
+build

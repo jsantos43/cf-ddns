@@ -1,4 +1,5 @@
 #include "http.h"
+#include "error.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <curl/curl.h>
@@ -6,7 +7,7 @@
 int read_public_ip(char *public_ip, int ip_length) {
   CURL *curl;
   CURLcode res;
-  int result = 0;
+  int result = DDNS_ERR_UNKNOWN;
   struct response_buffer resp = { .data = malloc(1), .size = 0 };
 
   curl = curl_easy_init();
@@ -20,9 +21,10 @@ int read_public_ip(char *public_ip, int ip_length) {
     res = curl_easy_perform(curl);
 
     if (res != CURLE_OK) {
-      result = 1;
+      result = DDNS_ERR_NETWORK;
     } else {
       snprintf(public_ip, ip_length, "%s", resp.data);
+      result = DDNS_OK;
     }
 
     curl_easy_cleanup(curl);

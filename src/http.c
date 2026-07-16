@@ -8,12 +8,12 @@ size_t write_callback(void *contents, size_t size, size_t nmemb, void *userp) {
 
   char *ptr = realloc(resp->data, resp->size + real_size + 1);
   if (!ptr) return 0;
-  resp->data = ptr; // Atualiza o ponteiro se o meu realloc mudar o bloco de memória
-  
-  // Copia o conteúdo que está chegando do contents para o final do meu buffer
+  resp->data = ptr; // update the pointer in case realloc moved the memory block
+
+  // append the incoming contents to the end of the buffer
   memcpy(&(resp->data[resp->size]), contents, real_size);
   resp->size += real_size;
-  resp->data[resp->size] = '\0'; // garante string null-terminated
+  resp->data[resp->size] = '\0'; // ensure a null-terminated string
 
   return real_size;
 }

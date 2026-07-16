@@ -11,29 +11,32 @@ Author: João Pedro Tomaz dos Santos
 #include "http.h"
 #include "cloudflare.h"
 #include "ipv4.h"
+#include "error.h"
 
 #define IP_LENGTH 46
 
 int main(void) {
   ddns_config config;
-  if (read_config_from_file(&config) != 0) {
-    fprintf(stderr, "Error to read config file\n");
-    return 1;
+  int err = read_config_from_file(&config);
+  if (err != DDNS_OK) {
+    fprintf(stderr, "Failed to read config: %s\n", ddns_error_str(err));
+    return err;
   }
-  
+
   curl_global_init(CURL_GLOBAL_DEFAULT);
 
   char record_ip[IP_LENGTH];
-  int read_record_result = read_record_ip(config, record_ip, IP_LENGTH);
-  if (read_record_result != 0) {
-    fprintf(stderr, "Error to read cloudflare record ip\n");
-    return read_record_result;
+  err = read_record_ip(config, record_ip, IP_LENGTH);
+  if (err != DDNS_OK) {
+    fprintf(stderr, "Failed to read the Cloudflare record: %s\n", ddns_error_str(err));
+    return err;
   }
 
   char public_ip[IP_LENGTH];
-  if (read_public_ip(public_ip, IP_LENGTH) != 0) {
-    fprintf(stderr, "Error to read public ip via a request\n");
-    return 4;
+  err = read_public_ip(public_ip, IP_LENGTH);
+  if (err != DDNS_OK) {
+    fprintf(stderr, "Failed to get the public IP: %s\n", ddns_error_str(err));
+    return err;
   }
 
   printf("CURRENT IP: %s\n", public_ip);
@@ -42,12 +45,12 @@ int main(void) {
   if (strcmp(record_ip, public_ip) != 0) {
     printf("IPs addresses are not equal!\n");
     
-    int update_record_result = update_record_ip(config, public_ip);
-    if (update_record_result == 0) {
+    err = update_record_ip(config, public_ip);
+    if (err == DDNS_OK) {
       printf("Record ip address updated!\n");
     } else {
-      printf("Failed to update record ip address!\n");
-      return update_record_result;
+      fprintf(stderr, "Failed to update the record: %s\n", ddns_error_str(err));
+      return err;
     }
   } else {
     printf("IPs addresses are synchronized!\n");

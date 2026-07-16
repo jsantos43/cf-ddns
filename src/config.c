@@ -1,11 +1,12 @@
 #include "config.h"
+#include "error.h"
 #include <stdio.h>
 
 int read_config_from_file(ddns_config *config) {
   FILE *config_file = fopen("config.txt", "r");
 
   if (config_file == NULL) {
-    return 1;
+    return DDNS_ERR_CONFIG;
   }
 
   fscanf(config_file, "%s", config->api_token);
@@ -15,5 +16,5 @@ int read_config_from_file(ddns_config *config) {
 
   fclose(config_file);
 
-  return 0;
+  return DDNS_OK;
 }

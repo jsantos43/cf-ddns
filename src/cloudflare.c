@@ -4,13 +4,14 @@
 #include "http.h"
 #include "json.h"
 #include "cloudflare.h"
+#include "error.h"
 
 #define CF_API_BASE_URL "https://api.cloudflare.com/client/v4"
 
 int read_record_ip(ddns_config config, char *ip, int ip_length) {
   CURL *curl;
   CURLcode res;
-  int result = 0;
+  int result = DDNS_ERR_UNKNOWN;
   struct response_buffer resp = { .data = malloc(1), .size = 0 };
 
   char url[512];
@@ -46,20 +47,24 @@ int read_record_ip(ddns_config config, char *ip, int ip_length) {
     res = curl_easy_perform(curl);
 
     if (res != CURLE_OK) {
-      result = 2;
+      result = DDNS_ERR_NETWORK;
     } else {
       result = parse_record_ip(resp.data, ip, ip_length);
     }
+
+    curl_slist_free_all(headers);
+    curl_easy_cleanup(curl);
   }
 
   free(resp.data);
+
   return result;
 }
 
 int update_record_ip(ddns_config config, const char *ip) {
   CURL *curl;
   CURLcode res;
-  int result = 0;
+  int result = DDNS_ERR_UNKNOWN;
   struct response_buffer resp = { .data = malloc(1), .size = 0 };
 
   char url[512];
@@ -105,12 +110,12 @@ int update_record_ip(ddns_config config, const char *ip) {
     res = curl_easy_perform(curl);
 
     if (res != CURLE_OK) {
-      result = 5;
+      result = DDNS_ERR_NETWORK;
     } else {
       long http_code = 0;
       curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_code);
 
-      if (http_code != 200) result = 5;
+      result = (http_code == 200) ? DDNS_OK : DDNS_ERR_API;
     }
 
     curl_slist_free_all(headers);
